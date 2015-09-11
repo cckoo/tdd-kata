@@ -19,64 +19,44 @@ class KataTennis {
     }
 
     private function translateScoreToString($score) {
-        switch ($score) {
-            case 0:
-                $res = "love ";
-                break;
-            case 1:
-                $res = "fifteen ";
-                break;
-            case 2:
-                $res = "thirty ";
-                break;
-            case 3:
-                $res = "forty ";
-                break;
-            default:
-                $res = $score;
-        }
-
-        return $res;
+        $dect = array('love ', 'fifteen ', 'thirty ', 'forty ');
+        return isset($dect[$score]) ? $dect[$score] : $score;
     }
 
-    public function getScore() {
-        $player1Score = $this->translateScoreToString($this->score[0]);
-        $player2Score = $this->translateScoreToString($this->score[1]);
-        if (is_numeric($player1Score) || is_numeric($player2Score)) {
-            if ($player1Score === $player2Score)
-                return 'deuce';
+    private function getScoreWhenInLimit($player1Score, $player2Score) {
+        $player1Score = $this->translateScoreToString($player1Score);
+        $player2Score = $this->translateScoreToString($player2Score);
 
-            if ($player1Score !== 'forty ' && !is_numeric($player1Score))
-                return $this->player2 . " win";
-
-            if ($player2Score !== 'forty ' && !is_numeric($player2Score))
-                return $this->player1 . " win";
-
-            if ($player1Score === 'forty ' && is_numeric($player2Score) && $player2Score >= 5)
-                return $this->player2 . " win";
-
-            if ($player2Score === 'forty ' && is_numeric($player1Score) && $player1Score >= 5)
-                return $this->player1 . " win";
-
-            if (is_numeric($player1Score) && is_numeric($player2Score)){
-                if ($player1Score - $player2Score >= 2)
-                    return $this->player1 . " win";
-                if ($player2Score - $player1Score >= 2)
-                    return $this->player2 . " win";
-            }
-
-            return $player1Score > $player2Score ? $this->player1 . " advantage" : $this->player2 . " advantage";
+        if ($player1Score !== $player2Score){
+            return trim($player1Score . $player2Score);
         }
-        if ($player1Score === $player2Score) {
 
-            if ($player1Score === 'forty ') {
-                return 'deuce';
-            }
-
+        if ($player1Score !== 'forty '){
             return $player1Score . "all";
         }
 
-        return  trim($player1Score . $player2Score);
+        return 'deuce';
+    }
+
+    private function getScoreWhenOutLimit($player1Score, $player2Score) {
+        if ($player1Score === $player2Score){
+            return 'deuce';
+        }
+
+        if (abs($player1Score - $player2Score) >= 2){
+            return $player1Score > $player2Score ? $this->player1 . ' win' : $this->player2 . ' win';
+        }
+
+        return $player1Score > $player2Score ? $this->player1 . " advantage" : $this->player2 . " advantage";
+    }
+
+    public function getScore() {
+
+        if (max($this->score[0],$this->score[1]) >= 4) {
+            return $this->getScoreWhenOutLimit($this->score[0], $this->score[1]);
+        }
+
+        return  $this->getScoreWhenInLimit($this->score[0], $this->score[1]);
     }
 
     public function whoGetThisScore($player) {
